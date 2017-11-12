@@ -51,6 +51,8 @@ public class PrimitiveSerializer implements Serializer {
             } else {
                 serializeTo = 8;
             }
+        } else if (object.getClass().equals(boolean.class) || object.getClass().equals(Boolean.class)) {
+            serializeTo = 1;
         }
 
         if (serializeTo == 1) {
@@ -65,6 +67,8 @@ public class PrimitiveSerializer implements Serializer {
             } else if (object.getClass().equals(long.class) || object.getClass().equals(Long.class)) {
                 long temp = (long) object;
                 byteBuffer.put((byte)temp);
+            } else if (object.getClass().equals(boolean.class) || object.getClass().equals(Boolean.class)) {
+                byteBuffer.put((boolean)object ? (byte) 1 : (byte) 0);
             } else {
                 byteBuffer.put((byte)object);
             }
@@ -150,12 +154,18 @@ public class PrimitiveSerializer implements Serializer {
             } else {
                deserializeTo = 8;
             }
+        } else if (clazz.equals(boolean.class) || clazz.equals(Boolean.class)) {
+            deserializeTo = 1;
         }
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
         byteBuffer.order(serialize.byteOrder().getByteOrder());
         if (deserializeTo == 1) {
-            return new DeserializedObject(byteBuffer.get(), 1);
+            if (clazz.equals(boolean.class) || clazz.equals(Boolean.class)) {
+                return new DeserializedObject(!(byteBuffer.get() == 0), 1);
+            } else {
+                return new DeserializedObject(byteBuffer.get(), 1);
+            }
         } else if (deserializeTo == 2) {
             return new DeserializedObject(byteBuffer.getShort(), 2);
         } else if (deserializeTo == 4) {
