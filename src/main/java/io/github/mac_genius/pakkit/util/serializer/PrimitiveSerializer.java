@@ -103,7 +103,7 @@ public class PrimitiveSerializer implements Serializer {
             return byteBuffer.array();
         } else if (serializeTo == 8) {
             ByteBuffer byteBuffer = ByteBuffer.allocate(8);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
+            byteBuffer.order(serialize.byteOrder().getByteOrder());
             if (object.getClass().equals(byte.class) || object.getClass().equals(Byte.class)) {
                 byte temp = (byte) object;
                 byteBuffer.putLong((long)temp);
@@ -152,21 +152,15 @@ public class PrimitiveSerializer implements Serializer {
             }
         }
 
+        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+        byteBuffer.order(serialize.byteOrder().getByteOrder());
         if (deserializeTo == 1) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
             return new DeserializedObject(byteBuffer.get(), 1);
         } else if (deserializeTo == 2) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
             return new DeserializedObject(byteBuffer.getShort(), 2);
         } else if (deserializeTo == 4) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
             return new DeserializedObject(byteBuffer.getInt(), 4);
         } else if (deserializeTo == 8) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
             return new DeserializedObject(byteBuffer.getLong(), 8);
         }
         return null;
