@@ -6,4 +6,6 @@ import java.io.InputStream;
 
 public interface PacketReader {
     Packet readPacket(InputStream inputStream);
+
+    Packet readPacket(byte[] data);
 }

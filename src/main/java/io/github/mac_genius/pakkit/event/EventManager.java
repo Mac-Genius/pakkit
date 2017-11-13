@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.PriorityQueue;
@@ -79,6 +82,32 @@ public class EventManager {
                     params[i] = socket.getOutputStream();
                 } else if (Socket.class.equals(classes[i])) {
                     params[i] = socket;
+                } else {
+                    params[i] = null;
+                }
+            }
+            if (execute) {
+                threadPoolExecutor.execute(new PacketHandler(listener.method, listener.listener, params));
+            }
+        }
+    }
+
+    public void handlePacket(Packet packet, DatagramSocket socket, DatagramPacket rawPacket) {
+        PriorityQueue<SortableListener> listeners = map.get(packet.getClass());
+        for (SortableListener listener : listeners) {
+            Class[] classes = listener.method.getParameterTypes();
+            Object[] params = new Object[classes.length];
+            boolean execute = false;
+            for (int i = 0; i < classes.length; i++) {
+                if (Packet.class.isAssignableFrom(classes[i]) && classes[i].equals(packet.getClass())) {
+                    params[i] = packet;
+                    execute = true;
+                } else if (DatagramSocket.class.equals(classes[i])) {
+                    params[i] = socket;
+                } else if (DatagramPacket.class.equals(classes[i])) {
+                    params[i] = rawPacket;
+                } else if (InetAddress.class.equals(classes[i])) {
+                    params[i] = rawPacket.getAddress();
                 } else {
                     params[i] = null;
                 }
