@@ -108,6 +108,8 @@ public class EventManager {
                     params[i] = rawPacket;
                 } else if (InetAddress.class.equals(classes[i])) {
                     params[i] = rawPacket.getAddress();
+                } else if (Integer.class.equals(classes[i]) || int.class.equals(classes[i]))  {
+                    params[i] = rawPacket.getPort();
                 } else {
                     params[i] = null;
                 }

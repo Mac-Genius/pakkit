@@ -13,7 +13,7 @@ public class StringSerializer implements Serializer {
     public byte[] serialize(Object object, Field field) {
         Ip ip = field.getAnnotation(Ip.class);
         if (ip != null) {
-            String[] ipAddress = ((String) object).split(".");
+            String[] ipAddress = ((String) object).split("\\.");
             ByteBuffer byteBuffer = ByteBuffer.allocate(4);
             byteBuffer.put(Byte.parseByte(ipAddress[0]));
             byteBuffer.put(Byte.parseByte(ipAddress[1]));

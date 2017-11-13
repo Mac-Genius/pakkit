@@ -7,6 +7,7 @@ import io.github.mac_genius.pakkit.util.PacketUtils;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 import java.util.TimerTask;
 
 public class DatagramSocketManager extends TimerTask {
@@ -17,6 +18,16 @@ public class DatagramSocketManager extends TimerTask {
     public DatagramSocketManager(PacketReader packetReader) {
         eventManager = new EventManager();
         this.packetReader = packetReader;
+    }
+
+    public DatagramSocketManager(PacketReader packetReader, int bindPort) {
+        eventManager = new EventManager();
+        this.packetReader = packetReader;
+        try {
+            socket = new DatagramSocket(bindPort);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public DatagramSocketManager(PacketReader packetReader, int bindPort, String url, int port) {
@@ -60,7 +71,7 @@ public class DatagramSocketManager extends TimerTask {
             while (socket != null && !socket.isClosed()) {
                 DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
                 socket.receive(packet);
-                Packet inputPacket = packetReader.readPacket(packet.getData());
+                Packet inputPacket = packetReader.readPacket(Arrays.copyOfRange(packet.getData(), 0, packet.getLength()));
                 eventManager.handlePacket(inputPacket, socket, packet);
             }
         } catch (IOException e) {
@@ -121,7 +132,7 @@ public class DatagramSocketManager extends TimerTask {
         try {
             DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
             socket.receive(packet);
-            return packetReader.readPacket(packet.getData());
+            return packetReader.readPacket(Arrays.copyOfRange(packet.getData(), 0, packet.getLength()));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
