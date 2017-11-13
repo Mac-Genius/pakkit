@@ -1,14 +1,14 @@
 package io.github.mac_genius.pakkit.util.serializer;
 
 
-import io.github.mac_genius.pakkit.annotation.Serialize;
+import java.lang.reflect.Field;
 
 public interface Serializer {
-    byte[] serialize(Object object, Serialize serialize);
+    byte[] serialize(Object object, Field field);
 
-    DeserializedObject deserialize(byte[] buffer, Serialize serialize, Class clazz);
+    DeserializedObject deserialize(byte[] buffer, Field field);
 
-    int getSize(Object object, Serialize serialize);
+    int getSize(Object object, Field field);
 
     boolean acceptsType(Class clazz);
 }

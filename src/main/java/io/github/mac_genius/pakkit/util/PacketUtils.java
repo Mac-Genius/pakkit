@@ -100,7 +100,7 @@ public class PacketUtils {
                 if (object != null) {
                     Serializer serializer = getSerializer(object.getClass());
                     if (serializer != null) {
-                        byte[] data = serializer.serialize(object, f.getAnnotation(Serialize.class));
+                        byte[] data = serializer.serialize(object, f);
                         byte[] temp = byteBuffer.array();
                         byteBuffer = ByteBuffer.allocate(temp.length + data.length);
                         byteBuffer.put(temp);
@@ -129,10 +129,10 @@ public class PacketUtils {
                     if (serializer != null) {
                         if (f.getAnnotation(Length.class) != null) {
                             if (f.getAnnotation(Length.class).includeLength()) {
-                                length += serializer.getSize(object, f.getAnnotation(Serialize.class));
+                                length += serializer.getSize(object, f);
                             }
                         } else {
-                            length += serializer.getSize(object, f.getAnnotation(Serialize.class));
+                            length += serializer.getSize(object, f);
                         }
                     }
                 }
@@ -157,8 +157,7 @@ public class PacketUtils {
                 f.setAccessible(true);
                 Serializer serializer = getSerializer(f.getType());
                 if (serializer != null) {
-                    DeserializedObject object = serializer.deserialize(Arrays.copyOfRange(buffer, offset, buffer.length),
-                            f.getAnnotation(Serialize.class), f.getType());
+                    DeserializedObject object = serializer.deserialize(Arrays.copyOfRange(buffer, offset, buffer.length), f);
                     f.set(packet, object.getObject());
                     offset += object.getRead();
                 }

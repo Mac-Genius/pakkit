@@ -1,7 +1,9 @@
 package io.github.mac_genius.pakkit.util.serializer;
 
+import io.github.mac_genius.pakkit.annotation.Ip;
 import io.github.mac_genius.pakkit.annotation.Serialize;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -23,7 +25,10 @@ public class PrimitiveSerializer implements Serializer {
     }
 
     @Override
-    public byte[] serialize(Object object, Serialize serialize) {
+    public byte[] serialize(Object object, Field field) {
+        Serialize serialize = field.getAnnotation(Serialize.class);
+        Ip ip = field.getAnnotation(Ip.class);
+        Class clazz = field.getType();
         int serializeTo = 0;
         if (object.getClass().equals(byte.class) || object.getClass().equals(Byte.class)) {
             serializeTo = 1;
@@ -34,7 +39,9 @@ public class PrimitiveSerializer implements Serializer {
                 serializeTo = 2;
             }
         } else if (object.getClass().equals(int.class) || object.getClass().equals(Integer.class)) {
-            if (serialize.size() == 1) {
+            if (ip != null) {
+                serializeTo = 4;
+            } else if (serialize.size() == 1) {
                 serializeTo = 1;
             } else if (serialize.size() == 2) {
                 serializeTo = 2;
@@ -57,7 +64,7 @@ public class PrimitiveSerializer implements Serializer {
 
         if (serializeTo == 1) {
             ByteBuffer byteBuffer = ByteBuffer.allocate(1);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
+            byteBuffer.order(serialize.byteOrder().getByteOrder());
             if (object.getClass().equals(short.class) || object.getClass().equals(Short.class)) {
                 short temp = (short) object;
                 byteBuffer.put((byte)temp);
@@ -75,7 +82,7 @@ public class PrimitiveSerializer implements Serializer {
             return byteBuffer.array();
         } else if (serializeTo == 2) {
             ByteBuffer byteBuffer = ByteBuffer.allocate(2);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
+            byteBuffer.order(serialize.byteOrder().getByteOrder());
             if (object.getClass().equals(byte.class) || object.getClass().equals(Byte.class)) {
                 byte temp = (byte) object;
                 byteBuffer.putShort((short)temp);
@@ -91,8 +98,11 @@ public class PrimitiveSerializer implements Serializer {
             return byteBuffer.array();
         } else if (serializeTo == 4) {
             ByteBuffer byteBuffer = ByteBuffer.allocate(4);
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
-            if (object.getClass().equals(byte.class) || object.getClass().equals(Byte.class)) {
+            byteBuffer.order(serialize.byteOrder().getByteOrder());
+            if (ip != null) {
+                byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+                byteBuffer.putInt((int) object);
+            } else if (object.getClass().equals(byte.class) || object.getClass().equals(Byte.class)) {
                 byte temp = (byte) object;
                 byteBuffer.putInt((int)temp);
             } else if (object.getClass().equals(short.class) || object.getClass().equals(Short.class)) {
@@ -126,7 +136,10 @@ public class PrimitiveSerializer implements Serializer {
     }
 
     @Override
-    public DeserializedObject deserialize(byte[] buffer, Serialize serialize, Class clazz) {
+    public DeserializedObject deserialize(byte[] buffer, Field field) {
+        Serialize serialize = field.getAnnotation(Serialize.class);
+        Ip ip = field.getAnnotation(Ip.class);
+        Class clazz = field.getType();
         int deserializeTo = 0;
         if (clazz.equals(byte.class) || clazz.equals(Byte.class)) {
             deserializeTo = 1;
@@ -137,7 +150,9 @@ public class PrimitiveSerializer implements Serializer {
                 deserializeTo = 2;
             }
         } else if (clazz.equals(int.class) || clazz.equals(Integer.class)) {
-            if (serialize.size() == 1) {
+            if (ip != null) {
+                deserializeTo = 4;
+            } else if (serialize.size() == 1) {
                 deserializeTo = 1;
             } else if (serialize.size() == 2) {
                 deserializeTo = 2;
@@ -169,7 +184,12 @@ public class PrimitiveSerializer implements Serializer {
         } else if (deserializeTo == 2) {
             return new DeserializedObject(byteBuffer.getShort(), 2);
         } else if (deserializeTo == 4) {
-            return new DeserializedObject(byteBuffer.getInt(), 4);
+            if (ip != null) {
+                byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+                return new DeserializedObject(byteBuffer.getInt(), 4);
+            } else {
+                return new DeserializedObject(byteBuffer.getInt(), 4);
+            }
         } else if (deserializeTo == 8) {
             return new DeserializedObject(byteBuffer.getLong(), 8);
         }
@@ -177,8 +197,10 @@ public class PrimitiveSerializer implements Serializer {
     }
 
     @Override
-    public int getSize(Object object, Serialize serialize) {
-        Class clazz = object.getClass();
+    public int getSize(Object object, Field field) {
+        Serialize serialize = field.getAnnotation(Serialize.class);
+        Ip ip = field.getAnnotation(Ip.class);
+        Class clazz = field.getType();
         if (clazz.equals(byte.class) || clazz.equals(Byte.class)) {
             return 1;
         } else if (clazz.equals(short.class) || clazz.equals(Short.class)) {
@@ -188,7 +210,9 @@ public class PrimitiveSerializer implements Serializer {
                 return 2;
             }
         } else if (clazz.equals(int.class) || clazz.equals(Integer.class)) {
-            if (serialize.size() == 1) {
+            if (ip != null) {
+                return 4;
+            } else if (serialize.size() == 1) {
                 return 1;
             } else if (serialize.size() == 2) {
                 return 2;

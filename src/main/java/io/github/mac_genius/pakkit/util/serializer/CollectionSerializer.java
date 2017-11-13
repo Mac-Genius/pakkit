@@ -4,6 +4,7 @@ import io.github.mac_genius.pakkit.annotation.Serialize;
 import io.github.mac_genius.pakkit.util.PacketUtils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -12,23 +13,26 @@ import java.util.Collection;
 
 public class CollectionSerializer implements Serializer {
     @Override
-    public byte[] serialize(Object object, Serialize serialize) {
+    public byte[] serialize(Object object, Field field) {
+        Serialize serialize = field.getAnnotation(Serialize.class);
         Collection collection = (Collection) object;
-        int size = getSize(object, serialize);
+        int size = getSize(object, field);
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
         byteBuffer.putInt(collection.size());
         Serializer serializer = PacketUtils.getInstance().getSerializer(object.getClass().getComponentType());
         if (serializer != null) {
             for (Object o : collection) {
-                byteBuffer.put(serializer.serialize(o, serialize));
+                byteBuffer.put(serializer.serialize(o, field));
             }
         }
         return byteBuffer.array();
     }
 
     @Override
-    public DeserializedObject deserialize(byte[] buffer, Serialize serialize, Class clazz) {
+    public DeserializedObject deserialize(byte[] buffer, Field field) {
+        Serialize serialize = field.getAnnotation(Serialize.class);
+        Class clazz = field.getType().getComponentType();
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
         int arraySize = byteBuffer.getInt();
@@ -45,7 +49,7 @@ public class CollectionSerializer implements Serializer {
                 Serializer serializer = PacketUtils.getInstance().getSerializer(clazz.getComponentType());
                 if (serializer != null) {
                     for (int i = 0; i < arraySize; i++) {
-                        DeserializedObject object = serializer.deserialize(Arrays.copyOfRange(buffer, offset, buffer.length), serialize, clazz.getComponentType());
+                        DeserializedObject object = serializer.deserialize(Arrays.copyOfRange(buffer, offset, buffer.length), field);
                         array.add(object.getObject());
                         offset += object.getRead();
                     }
@@ -58,14 +62,14 @@ public class CollectionSerializer implements Serializer {
     }
 
     @Override
-    public int getSize(Object object, Serialize serialize) {
+    public int getSize(Object object, Field field) {
         Collection collection = (Collection) object;
         int size = 0;
         size += 4;
         Serializer serializer = PacketUtils.getInstance().getSerializer(object.getClass().getComponentType());
         if (serializer != null) {
             for (Object o : collection) {
-                size += serializer.getSize(o.getClass(), serialize);
+                size += serializer.getSize(o.getClass(), field);
             }
         }
         return size;
